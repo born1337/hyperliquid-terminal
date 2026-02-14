@@ -20,24 +20,14 @@ Live data via WebSocket. Read-only — no private keys needed.
 
 ## Install
 
+```sh
+curl -sSfL https://raw.githubusercontent.com/born1337/hltui/main/install.sh | sh
+```
+
 ### From source (requires Go 1.25+)
 
 ```sh
 go install github.com/born1337/hltui@latest
-```
-
-### Build from repo
-
-```sh
-git clone https://github.com/born1337/hltui.git
-cd hltui
-go build -o hltui .
-```
-
-Move the binary somewhere in your `$PATH`:
-
-```sh
-mv hltui /usr/local/bin/
 ```
 
 ## Usage
