@@ -10,13 +10,23 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// Add wallet form overlay
+	if m.walletFormActive {
+		return ui.RenderAddWalletForm(m.walletFormName, m.walletFormAddr, m.walletFormField, m.walletFormTestnet, m.walletFormVault, m.walletFormErr, m.width, m.height)
+	}
+
+	// Wallet picker overlay
+	if m.showWalletPicker {
+		return ui.RenderWalletPicker(m.cfg.Wallets, m.cfg.ActiveWallet, m.walletCursor, m.width, m.height)
+	}
+
 	// Help overlay
 	if m.showHelp {
 		return ui.RenderHelp(m.width, m.height)
 	}
 
 	// Title bar
-	titleBar := ui.RenderTitleBar(m.width, m.cfg.IsTestnet, m.wsConnected)
+	titleBar := ui.RenderTitleBar(m.width, m.cfg.IsTestnet, m.wsConnected, m.cfg.WalletName, m.cfg.TruncatedAddress())
 
 	// Account header
 	header := ui.RenderHeader(m.store, m.width)

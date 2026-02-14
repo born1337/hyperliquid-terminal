@@ -56,8 +56,11 @@ func RenderHeader(s *store.Store, width int) string {
 	return lipgloss.NewStyle().Width(width).Render(content)
 }
 
-func RenderTitleBar(width int, isTestnet, wsConnected bool) string {
+func RenderTitleBar(width int, isTestnet, wsConnected bool, walletName, truncAddr string) string {
 	title := style.White.Render("HLTUI v0.1.0")
+	if walletName != "" {
+		title += "  " + style.Cyan.Render(walletName) + " " + style.Dim.Render(truncAddr)
+	}
 
 	var indicators []string
 	if isTestnet {

@@ -8,6 +8,6 @@ func RenderStatusBar(width int, errMsg string) string {
 	if errMsg != "" {
 		return style.Red.Render(errMsg)
 	}
-	hints := "←/→:switch  0-6:views  j/k:scroll  s:sort  r:refresh  ;:help  q:quit"
+	hints := "←/→:switch  0-6:views  j/k:scroll  s:sort  r:refresh  w:wallet  ;:help  q:quit"
 	return style.Dim.Render(hints)
 }

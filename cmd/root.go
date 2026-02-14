@@ -17,20 +17,41 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "hltui <address>",
+	Use:   "hltui [address]",
 	Short: "Hyperliquid TUI Dashboard",
-	Long:  "Real-time terminal dashboard for monitoring Hyperliquid positions, orders, fills, funding, portfolio, and vaults.",
-	Args:  cobra.ExactArgs(1),
+	Long:  "Real-time terminal dashboard for monitoring Hyperliquid positions, orders, fills, funding, portfolio, and vaults.\n\nRun with an address argument or configure wallets in ~/.config/hltui/wallets.json",
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		address := args[0]
+		var cfg *config.Config
 
-		// Validate address
-		matched, _ := regexp.MatchString(`^0x[a-fA-F0-9]{40}$`, address)
-		if !matched {
-			return fmt.Errorf("invalid address: must be 0x followed by 40 hex characters")
+		// Try loading wallets from config
+		wallets, walletsErr := config.LoadWallets()
+
+		if len(args) == 1 {
+			address := args[0]
+
+			// Validate address
+			matched, _ := regexp.MatchString(`^0x[a-fA-F0-9]{40}$`, address)
+			if !matched {
+				return fmt.Errorf("invalid address: must be 0x followed by 40 hex characters")
+			}
+
+			if walletsErr == nil && len(wallets) > 0 {
+				// Prepend CLI address as first wallet, merge with config wallets
+				cliWallet := config.Wallet{Name: "CLI", Address: address, Testnet: testnet, Vault: vault}
+				allWallets := append([]config.Wallet{cliWallet}, wallets...)
+				cfg = config.NewWithWallets(allWallets, 0, testnet, vault)
+			} else {
+				cfg = config.New(address, testnet, vault)
+			}
+		} else {
+			// No address arg — require wallets.json
+			if walletsErr != nil {
+				return fmt.Errorf("no address provided and wallets not configured: %w\n\nUsage: hltui <address>\n   or: create ~/.config/hltui/wallets.json", walletsErr)
+			}
+			cfg = config.NewWithWallets(wallets, 0, testnet, vault)
 		}
 
-		cfg := config.New(address, testnet, vault)
 		m := app.NewModel(cfg)
 
 		p := tea.NewProgram(m, tea.WithAltScreen())

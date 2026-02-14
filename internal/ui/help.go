@@ -20,6 +20,7 @@ func RenderHelp(width, height int) string {
 		style.Cyan.Render("Actions"),
 		"  " + style.Yellow.Render("s") + "  Toggle sort direction",
 		"  " + style.Yellow.Render("f") + "  Cycle OI filter (Market view)",
+		"  " + style.Yellow.Render("w") + "  Switch wallet / add / delete",
 		"  " + style.Yellow.Render("r") + "  Refresh all data",
 		"  " + style.Yellow.Render(";") + "  Toggle this help",
 		"  " + style.Yellow.Render("q") + "  Quit",

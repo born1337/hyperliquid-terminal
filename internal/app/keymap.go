@@ -3,22 +3,23 @@ package app
 import "github.com/charmbracelet/bubbles/key"
 
 type KeyMap struct {
-	Quit     key.Binding
-	Tab      key.Binding
-	ShiftTab key.Binding
-	NextView key.Binding
-	PrevView key.Binding
-	View0    key.Binding
-	View1    key.Binding
-	View2    key.Binding
-	View3    key.Binding
-	View4    key.Binding
-	View5    key.Binding
-	View6    key.Binding
-	Up       key.Binding
-	Down     key.Binding
-	Refresh  key.Binding
-	Help     key.Binding
+	Quit         key.Binding
+	Tab          key.Binding
+	ShiftTab     key.Binding
+	NextView     key.Binding
+	PrevView     key.Binding
+	View0        key.Binding
+	View1        key.Binding
+	View2        key.Binding
+	View3        key.Binding
+	View4        key.Binding
+	View5        key.Binding
+	View6        key.Binding
+	Up           key.Binding
+	Down         key.Binding
+	Refresh      key.Binding
+	Help         key.Binding
+	WalletPicker key.Binding
 }
 
 var Keys = KeyMap{
@@ -64,5 +65,9 @@ var Keys = KeyMap{
 	Help: key.NewBinding(
 		key.WithKeys(";"),
 		key.WithHelp(";", "help"),
+	),
+	WalletPicker: key.NewBinding(
+		key.WithKeys("w"),
+		key.WithHelp("w", "switch wallet"),
 	),
 }

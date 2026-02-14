@@ -42,6 +42,37 @@ func (s *Store) Unlock()  { s.mu.Unlock() }
 func (s *Store) RLock()   { s.mu.RLock() }
 func (s *Store) RUnlock() { s.mu.RUnlock() }
 
+// ClearUserData clears per-wallet data, preserving global market data (AllMids, Meta, FundingRates).
+func (s *Store) ClearUserData() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.ClearinghouseState = nil
+	s.OpenOrders = nil
+	s.Fills = nil
+	s.FundingPayments = nil
+	s.Portfolio = nil
+	s.UserFees = nil
+	s.VaultEquities = nil
+	s.VaultDetails = make(map[string]*api.VaultDetails)
+}
+
+// ClearAll clears all data (used when switching networks).
+func (s *Store) ClearAll() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.ClearinghouseState = nil
+	s.AllMids = make(api.AllMids)
+	s.MetaAndAssetCtxs = nil
+	s.OpenOrders = nil
+	s.Fills = nil
+	s.FundingPayments = nil
+	s.Portfolio = nil
+	s.UserFees = nil
+	s.VaultEquities = nil
+	s.VaultDetails = make(map[string]*api.VaultDetails)
+	s.FundingRates = make(map[string]float64)
+}
+
 func (s *Store) UpdateMids(mids map[string]string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

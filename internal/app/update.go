@@ -82,6 +82,71 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.KeyMsg:
+		// Add wallet form overlay captures all keys
+		if m.walletFormActive {
+			switch msg.String() {
+			case "esc":
+				m.walletFormActive = false
+			case "tab":
+				m.walletFormField = (m.walletFormField + 1) % 4
+				m.focusWalletFormField()
+			case "shift+tab":
+				m.walletFormField = (m.walletFormField + 3) % 4
+				m.focusWalletFormField()
+			case "enter":
+				if m.walletFormField == 2 {
+					m.walletFormTestnet = !m.walletFormTestnet
+				} else if m.walletFormField == 3 {
+					m.walletFormVault = !m.walletFormVault
+				} else {
+					m.submitWalletForm()
+				}
+			case " ":
+				if m.walletFormField == 2 {
+					m.walletFormTestnet = !m.walletFormTestnet
+				} else if m.walletFormField == 3 {
+					m.walletFormVault = !m.walletFormVault
+				}
+			default:
+				if m.walletFormField == 0 {
+					m.walletFormName, _ = m.walletFormName.Update(msg)
+				} else if m.walletFormField == 1 {
+					m.walletFormAddr, _ = m.walletFormAddr.Update(msg)
+				}
+			}
+			return m, tea.Batch(cmds...)
+		}
+
+		// Wallet picker overlay captures all keys
+		if m.showWalletPicker {
+			addIdx := len(m.cfg.Wallets) // index of "+ Add wallet" entry
+			switch msg.String() {
+			case "j", "down":
+				if m.walletCursor < addIdx {
+					m.walletCursor++
+				}
+			case "k", "up":
+				if m.walletCursor > 0 {
+					m.walletCursor--
+				}
+			case "enter":
+				if m.walletCursor == addIdx {
+					m.initWalletForm()
+				} else {
+					m.showWalletPicker = false
+					cmd := m.switchWallet(m.walletCursor)
+					if cmd != nil {
+						cmds = append(cmds, cmd)
+					}
+				}
+			case "d":
+				m.deleteWalletAtCursor()
+			case "esc", "w", "q":
+				m.showWalletPicker = false
+			}
+			return m, tea.Batch(cmds...)
+		}
+
 		// Help overlay captures all keys
 		if m.showHelp {
 			if msg.String() == ";" || msg.String() == "esc" || msg.String() == "q" {
@@ -120,6 +185,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.activeView = ViewPortfolio
 		case key.Matches(msg, Keys.View6):
 			m.activeView = ViewVaults
+
+		case key.Matches(msg, Keys.WalletPicker):
+			m.showWalletPicker = true
+			m.walletCursor = m.cfg.ActiveWallet
 
 		case key.Matches(msg, Keys.Refresh):
 			m.loading = true
