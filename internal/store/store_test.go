@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/born1337/hltui/internal/api"
+	"github.com/born1337/hyperliquid-terminal/internal/api"
 )
 
 func TestNewStore(t *testing.T) {

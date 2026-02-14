@@ -3,8 +3,8 @@ package ui
 import (
 	"fmt"
 
-	"github.com/born1337/hltui/internal/config"
-	"github.com/born1337/hltui/internal/style"
+	"github.com/born1337/hyperliquid-terminal/internal/config"
+	"github.com/born1337/hyperliquid-terminal/internal/style"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 )

@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/born1337/hltui/internal/api"
-	"github.com/born1337/hltui/internal/ws"
+	"github.com/born1337/hyperliquid-terminal/internal/api"
+	"github.com/born1337/hyperliquid-terminal/internal/ws"
 )
 
 // Initial data loaded from HTTP

@@ -21,13 +21,13 @@ Live data via WebSocket. Read-only — no private keys needed.
 ## Install
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/born1337/hltui/main/install.sh | sh
+curl -sSfL https://raw.githubusercontent.com/born1337/hyperliquid-terminal/main/install.sh | sh
 ```
 
 ### From source (requires Go 1.25+)
 
 ```sh
-go install github.com/born1337/hltui@latest
+go install github.com/born1337/hyperliquid-terminal@latest
 ```
 
 ## Usage
@@ -66,6 +66,7 @@ hltui -V 0xVaultAddressHere
 | `j`/`k` or `↑`/`↓` | Scroll |
 | `s` | Toggle sort direction |
 | `f` | Cycle OI filter (Market) |
+| `w` | Wallet picker (switch/add/delete) |
 | `r` | Refresh data |
 | `;` | Help |
 | `q` | Quit |

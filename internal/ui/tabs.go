@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/born1337/hltui/internal/style"
+	"github.com/born1337/hyperliquid-terminal/internal/style"
 )
 
 var TabNames = []string{

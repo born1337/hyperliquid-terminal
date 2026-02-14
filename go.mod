@@ -1,4 +1,4 @@
-module github.com/born1337/hltui
+module github.com/born1337/hyperliquid-terminal
 
 go 1.25.5
 

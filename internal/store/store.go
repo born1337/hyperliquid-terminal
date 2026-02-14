@@ -4,8 +4,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/born1337/hltui/internal/api"
-	"github.com/born1337/hltui/internal/util"
+	"github.com/born1337/hyperliquid-terminal/internal/api"
+	"github.com/born1337/hyperliquid-terminal/internal/util"
 )
 
 type Store struct {

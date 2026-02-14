@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/born1337/hltui/internal/style"
+	"github.com/born1337/hyperliquid-terminal/internal/style"
 	"github.com/charmbracelet/lipgloss"
 )
 

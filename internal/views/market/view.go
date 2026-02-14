@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/born1337/hltui/internal/style"
-	"github.com/born1337/hltui/internal/util"
+	"github.com/born1337/hyperliquid-terminal/internal/style"
+	"github.com/born1337/hyperliquid-terminal/internal/util"
 	"github.com/charmbracelet/lipgloss"
 )
 

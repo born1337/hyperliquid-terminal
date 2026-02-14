@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-REPO="born1337/hltui"
+REPO="born1337/hyperliquid-terminal"
 INSTALL_DIR="/usr/local/bin"
 
 # Detect OS

@@ -1,7 +1,7 @@
 package fills
 
 import (
-	"github.com/born1337/hltui/internal/store"
+	"github.com/born1337/hyperliquid-terminal/internal/store"
 	tea "github.com/charmbracelet/bubbletea"
 )
 

@@ -5,8 +5,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/born1337/hltui/internal/app"
-	"github.com/born1337/hltui/internal/config"
+	"github.com/born1337/hyperliquid-terminal/internal/app"
+	"github.com/born1337/hyperliquid-terminal/internal/config"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
