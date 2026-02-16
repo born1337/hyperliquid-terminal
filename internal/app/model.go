@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/born1337/hyperliquid-terminal/internal/api"
@@ -20,6 +21,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textinput"
 )
+
+const maxFills = 5000
 
 const (
 	ViewMarket = iota
@@ -71,7 +74,7 @@ type Model struct {
 
 func NewModel(cfg *config.Config) Model {
 	s := store.New()
-	wsCh := make(chan ws.Message, 64)
+	wsCh := make(chan ws.Message, 256)
 
 	return Model{
 		cfg:    cfg,
@@ -100,24 +103,44 @@ func (m Model) Init() tea.Cmd {
 func (m Model) fetchInitialData() tea.Cmd {
 	return func() tea.Msg {
 		addr := m.cfg.Address
+		weekAgo := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
 
-		state, err := m.api.GetClearinghouseState(addr)
-		if err != nil {
-			return InitialDataMsg{Err: err}
+		var (
+			state     *api.ClearinghouseState
+			stateErr  error
+			mids      api.AllMids
+			meta      *api.MetaAndAssetCtxs
+			openOrders []api.OpenOrder
+			userFills  []api.Fill
+			fundingPay []api.FundingPayment
+			portfolio  []api.PortfolioPeriod
+			fees       *api.UserFees
+			vaultEq    []api.VaultEquity
+		)
+
+		var wg sync.WaitGroup
+		wg.Add(9)
+
+		go func() { defer wg.Done(); state, stateErr = m.api.GetClearinghouseState(addr) }()
+		go func() { defer wg.Done(); mids, _ = m.api.GetAllMids() }()
+		go func() { defer wg.Done(); meta, _ = m.api.GetMetaAndAssetCtxs() }()
+		go func() { defer wg.Done(); openOrders, _ = m.api.GetOpenOrders(addr) }()
+		go func() { defer wg.Done(); userFills, _ = m.api.GetUserFills(addr) }()
+		go func() { defer wg.Done(); fundingPay, _ = m.api.GetUserFunding(addr, weekAgo) }()
+		go func() { defer wg.Done(); portfolio, _ = m.api.GetPortfolio(addr) }()
+		go func() { defer wg.Done(); fees, _ = m.api.GetUserFees(addr) }()
+		go func() { defer wg.Done(); vaultEq, _ = m.api.GetUserVaultEquities(addr) }()
+
+		wg.Wait()
+
+		if stateErr != nil {
+			return InitialDataMsg{Err: stateErr}
 		}
 
-		mids, _ := m.api.GetAllMids()
-		meta, _ := m.api.GetMetaAndAssetCtxs()
-		openOrders, _ := m.api.GetOpenOrders(addr)
-		userFills, _ := m.api.GetUserFills(addr)
-
-		// Funding from last 7 days
-		weekAgo := time.Now().Add(-7 * 24 * time.Hour).UnixMilli()
-		fundingPayments, _ := m.api.GetUserFunding(addr, weekAgo)
-
-		portfolioEntries, _ := m.api.GetPortfolio(addr)
-		fees, _ := m.api.GetUserFees(addr)
-		vaultEquities, _ := m.api.GetUserVaultEquities(addr)
+		// Cap fills to prevent unbounded growth
+		if len(userFills) > maxFills {
+			userFills = userFills[:maxFills]
+		}
 
 		return InitialDataMsg{
 			State:     state,
@@ -125,10 +148,10 @@ func (m Model) fetchInitialData() tea.Cmd {
 			Meta:      meta,
 			Orders:    openOrders,
 			Fills:     userFills,
-			Funding:   fundingPayments,
-			Portfolio: portfolioEntries,
+			Funding:   fundingPay,
+			Portfolio: portfolio,
 			Fees:      fees,
-			Vaults:    vaultEquities,
+			Vaults:    vaultEq,
 		}
 	}
 }
@@ -175,22 +198,15 @@ func (m *Model) handleWSMessage(msg ws.Message) {
 			m.store.UpdateMids(data.Mids)
 		}
 	case "orderUpdates":
-		// Refetch orders on any order update
-		// Capture address to guard against stale writes after wallet switch
-		addr := m.cfg.Address
-		go func() {
-			orders, err := m.api.GetOpenOrders(addr)
-			if err == nil && m.cfg.Address == addr {
-				m.store.Lock()
-				m.store.OpenOrders = orders
-				m.store.Unlock()
-			}
-		}()
+		// Apply delta updates from WS instead of full refetch
+		var updates []ws.OrderUpdate
+		if err := json.Unmarshal(msg.Data, &updates); err == nil {
+			m.store.ApplyOrderUpdates(updates)
+		}
 	case "user":
 		var event ws.UserEvent
 		if err := json.Unmarshal(msg.Data, &event); err == nil {
 			if len(event.Fills) > 0 {
-				// Prepend new fills
 				m.store.Lock()
 				newFills := make([]api.Fill, len(event.Fills))
 				for i, f := range event.Fills {
@@ -207,7 +223,11 @@ func (m *Model) handleWSMessage(msg ws.Message) {
 						Dir:       f.Dir,
 					}
 				}
-				m.store.Fills = append(newFills, m.store.Fills...)
+				combined := append(newFills, m.store.Fills...)
+				if len(combined) > maxFills {
+					combined = combined[:maxFills]
+				}
+				m.store.Fills = combined
 				m.store.Unlock()
 			}
 		}
@@ -246,7 +266,7 @@ func (m *Model) switchWallet(idx int) tea.Cmd {
 	}
 
 	// New WS channel so stale goroutines drain harmlessly into the old one
-	m.wsCh = make(chan ws.Message, 64)
+	m.wsCh = make(chan ws.Message, 256)
 
 	// Reset per-wallet views
 	m.resetViewScrolls()

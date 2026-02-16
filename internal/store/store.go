@@ -6,6 +6,7 @@ import (
 
 	"github.com/born1337/hyperliquid-terminal/internal/api"
 	"github.com/born1337/hyperliquid-terminal/internal/util"
+	"github.com/born1337/hyperliquid-terminal/internal/ws"
 )
 
 type Store struct {
@@ -104,22 +105,17 @@ func (s *Store) AccountValue() float64 {
 	return util.ParseFloat(s.ClearinghouseState.MarginSummary.AccountValue)
 }
 
-// PositionsSortedByPnl returns a copy of positions sorted by unrealized PnL descending.
+// PositionsSorted returns a copy of positions sorted by unrealized PnL.
 // The returned slice and associated data (mids, funding rates) are snapshot copies
 // safe to use without holding the store lock.
-func (s *Store) PositionsSortedByPnl() ([]api.AssetPosition, map[string]string, map[string]float64) {
+func (s *Store) PositionsSorted(ascending bool) ([]api.AssetPosition, map[string]string, map[string]float64) {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
 	if s.ClearinghouseState == nil {
+		s.mu.RUnlock()
 		return nil, nil, nil
 	}
 	positions := make([]api.AssetPosition, len(s.ClearinghouseState.AssetPositions))
 	copy(positions, s.ClearinghouseState.AssetPositions)
-	sort.Slice(positions, func(i, j int) bool {
-		pi := util.ParseFloat(positions[i].Position.UnrealizedPnl)
-		pj := util.ParseFloat(positions[j].Position.UnrealizedPnl)
-		return pi > pj
-	})
 
 	// Copy mids and funding rates so caller doesn't need to hold lock
 	mids := make(map[string]string, len(s.AllMids))
@@ -130,8 +126,71 @@ func (s *Store) PositionsSortedByPnl() ([]api.AssetPosition, map[string]string, 
 	for k, v := range s.FundingRates {
 		fundingRates[k] = v
 	}
+	s.mu.RUnlock()
+
+	// Sort outside the lock
+	sort.Slice(positions, func(i, j int) bool {
+		pi := util.ParseFloat(positions[i].Position.UnrealizedPnl)
+		pj := util.ParseFloat(positions[j].Position.UnrealizedPnl)
+		if ascending {
+			return pi < pj
+		}
+		return pi > pj
+	})
 
 	return positions, mids, fundingRates
+}
+
+// ApplyOrderUpdates applies incremental order updates from the WebSocket.
+func (s *Store) ApplyOrderUpdates(updates []ws.OrderUpdate) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, u := range updates {
+		switch u.Status {
+		case "open", "replaced", "triggered":
+			// Upsert: find by Oid or add new
+			found := false
+			for i, o := range s.OpenOrders {
+				if o.Oid == u.Order.Oid {
+					s.OpenOrders[i] = api.OpenOrder{
+						Coin:      u.Order.Coin,
+						Side:      u.Order.Side,
+						LimitPx:   u.Order.LimitPx,
+						Sz:        u.Order.Sz,
+						Oid:       u.Order.Oid,
+						Timestamp: u.Order.Timestamp,
+						OrigSz:    u.Order.OrigSz,
+						OrderType: u.Order.OrderType,
+						ReduceOnly: u.Order.ReduceOnly,
+					}
+					found = true
+					break
+				}
+			}
+			if !found {
+				s.OpenOrders = append(s.OpenOrders, api.OpenOrder{
+					Coin:      u.Order.Coin,
+					Side:      u.Order.Side,
+					LimitPx:   u.Order.LimitPx,
+					Sz:        u.Order.Sz,
+					Oid:       u.Order.Oid,
+					Timestamp: u.Order.Timestamp,
+					OrigSz:    u.Order.OrigSz,
+					OrderType: u.Order.OrderType,
+					ReduceOnly: u.Order.ReduceOnly,
+				})
+			}
+		case "filled", "canceled", "marginCanceled", "liquidatedCanceled":
+			// Remove by Oid
+			for i, o := range s.OpenOrders {
+				if o.Oid == u.Order.Oid {
+					s.OpenOrders = append(s.OpenOrders[:i], s.OpenOrders[i+1:]...)
+					break
+				}
+			}
+		}
+	}
 }
 
 func (s *Store) MidPrice(coin string) float64 {

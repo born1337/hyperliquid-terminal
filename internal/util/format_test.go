@@ -66,8 +66,8 @@ func TestFormatFundingRate(t *testing.T) {
 		input float64
 		want  string
 	}{
-		{0.0001, "0.0100%"},
-		{-0.00005, "-0.0050%"},
+		{0.0001, "0.2400%"},
+		{-0.00005, "-0.1200%"},
 		{0, "0.0000%"},
 	}
 	for _, tt := range tests {

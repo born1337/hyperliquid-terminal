@@ -10,6 +10,8 @@ import (
 	"github.com/born1337/hyperliquid-terminal/internal/util"
 )
 
+var separator50 = strings.Repeat("─", 50)
+
 func (m Model) View() string {
 	var b strings.Builder
 
@@ -21,7 +23,7 @@ func (m Model) View() string {
 	// Performance summary
 	b.WriteString(style.White.Render("Performance Summary"))
 	b.WriteString("\n")
-	b.WriteString(style.Dim.Render(strings.Repeat("─", 50)))
+	b.WriteString(style.Dim.Render(separator50))
 	b.WriteString("\n\n")
 
 	if len(periods) > 0 {
@@ -87,7 +89,7 @@ func (m Model) View() string {
 	b.WriteString("\n")
 	b.WriteString(style.White.Render("Fee Schedule"))
 	b.WriteString("\n")
-	b.WriteString(style.Dim.Render(strings.Repeat("─", 50)))
+	b.WriteString(style.Dim.Render(separator50))
 	b.WriteString("\n\n")
 
 	if fees != nil {

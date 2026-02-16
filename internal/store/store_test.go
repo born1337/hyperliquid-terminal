@@ -141,7 +141,7 @@ func TestAccountValue(t *testing.T) {
 	}
 }
 
-func TestPositionsSortedByPnl(t *testing.T) {
+func TestPositionsSorted(t *testing.T) {
 	s := New()
 	s.AllMids = api.AllMids{"BTC": "91000", "ETH": "3400"}
 	s.FundingRates = map[string]float64{"BTC": 0.0001, "ETH": -0.00005}
@@ -154,7 +154,7 @@ func TestPositionsSortedByPnl(t *testing.T) {
 		},
 	}
 
-	positions, mids, rates := s.PositionsSortedByPnl()
+	positions, mids, rates := s.PositionsSorted(false)
 
 	if len(positions) != 3 {
 		t.Fatalf("len = %d, want 3", len(positions))
@@ -182,9 +182,9 @@ func TestPositionsSortedByPnl(t *testing.T) {
 	}
 }
 
-func TestPositionsSortedByPnlNilState(t *testing.T) {
+func TestPositionsSortedNilState(t *testing.T) {
 	s := New()
-	positions, mids, rates := s.PositionsSortedByPnl()
+	positions, mids, rates := s.PositionsSorted(false)
 	if positions != nil {
 		t.Error("positions should be nil for nil state")
 	}
@@ -196,7 +196,7 @@ func TestPositionsSortedByPnlNilState(t *testing.T) {
 	}
 }
 
-func TestPositionsSortedByPnlDoesNotMutateOriginal(t *testing.T) {
+func TestPositionsSortedDoesNotMutateOriginal(t *testing.T) {
 	s := New()
 	s.ClearinghouseState = &api.ClearinghouseState{
 		AssetPositions: []api.AssetPosition{
@@ -205,7 +205,7 @@ func TestPositionsSortedByPnlDoesNotMutateOriginal(t *testing.T) {
 		},
 	}
 
-	_, _, _ = s.PositionsSortedByPnl()
+	_, _, _ = s.PositionsSorted(false)
 
 	// Original should be unchanged
 	if s.ClearinghouseState.AssetPositions[0].Position.Coin != "BTC" {

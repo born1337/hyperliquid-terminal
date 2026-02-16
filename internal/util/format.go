@@ -50,7 +50,7 @@ func FormatPercent(val float64) string {
 }
 
 func FormatFundingRate(val float64) string {
-	return fmt.Sprintf("%.4f%%", val*100)
+	return fmt.Sprintf("%.4f%%", val*100*24)
 }
 
 func FormatLeverage(val float64) string {

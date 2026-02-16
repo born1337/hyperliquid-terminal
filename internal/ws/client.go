@@ -54,7 +54,20 @@ func (c *Client) Connect() error {
 
 func (c *Client) Subscribe(sub SubRequest) {
 	c.mu.Lock()
-	c.subscriptions = append(c.subscriptions, sub)
+	// Deduplicate: check if this subscription already exists
+	data, _ := json.Marshal(sub.Subscription)
+	key := string(data)
+	found := false
+	for _, existing := range c.subscriptions {
+		ed, _ := json.Marshal(existing.Subscription)
+		if string(ed) == key {
+			found = true
+			break
+		}
+	}
+	if !found {
+		c.subscriptions = append(c.subscriptions, sub)
+	}
 	c.mu.Unlock()
 	c.send(sub)
 }
@@ -99,7 +112,7 @@ func (c *Client) readLoop() {
 		case <-c.done:
 			return
 		default:
-			// Drop message if channel is full
+			log.Printf("ws: dropped message on channel %s (buffer full)", msg.Channel)
 		}
 	}
 }

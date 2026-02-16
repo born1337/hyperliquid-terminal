@@ -2,7 +2,6 @@ package positions
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/born1337/hyperliquid-terminal/internal/style"
@@ -10,21 +9,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+var separator80 = strings.Repeat("─", 80)
+
 func (m Model) View() string {
-	positions, mids, fundingRates := m.store.PositionsSortedByPnl()
+	positions, mids, fundingRates := m.store.PositionsSorted(m.sortAsc)
 	if len(positions) == 0 {
 		return style.Dim.Render("  No open positions")
 	}
-
-	// Sort by PNL
-	sort.Slice(positions, func(i, j int) bool {
-		pi := util.ParseFloat(positions[i].Position.UnrealizedPnl)
-		pj := util.ParseFloat(positions[j].Position.UnrealizedPnl)
-		if m.sortAsc {
-			return pi < pj
-		}
-		return pi > pj
-	})
 
 	arrow := " ▼"
 	if m.sortAsc {
@@ -35,7 +26,7 @@ func (m Model) View() string {
 
 	// Header
 	header := fmt.Sprintf("%-9s %-6s %-5s %14s %11s %14s %16s %12s %12s %12s %12s",
-		"COIN", "SIDE", "LEV", "VALUE", "FUND RATE", "FUND FEE", "PNL"+arrow, "ROE", "ENTRY", "CURRENT", "LIQ",
+		"COIN", "SIDE", "LEV", "VALUE", "FUND/24H", "FUND FEE", "PNL"+arrow, "ROE", "ENTRY", "CURRENT", "LIQ",
 	)
 	b.WriteString(style.TableHeader.Render(header))
 	b.WriteString("\n")
@@ -106,8 +97,6 @@ func (m Model) View() string {
 			liqStr = util.FormatPrice(util.ParseFloat(*p.LiquidationPx))
 		}
 
-		// Build each cell with fixed width, then join
-		// Use padRight for left-aligned, padLeft for right-aligned
 		cells := []string{
 			style.White.Render(padRight(p.Coin, 9)),
 			sideStyle.Render(padRight(side, 6)),
@@ -127,7 +116,7 @@ func (m Model) View() string {
 
 	// Summary
 	b.WriteString("\n")
-	b.WriteString(style.Dim.Render(strings.Repeat("─", 80)))
+	b.WriteString(style.Dim.Render(separator80))
 	b.WriteString("\n")
 
 	summaryLine := fmt.Sprintf("  %s %s   %s %s   %s %s",
@@ -149,17 +138,15 @@ func pnlSummaryStyle(val float64) lipgloss.Style {
 }
 
 func padRight(s string, width int) string {
-	w := lipgloss.Width(s)
-	if w >= width {
+	if len(s) >= width {
 		return s
 	}
-	return s + strings.Repeat(" ", width-w)
+	return s + strings.Repeat(" ", width-len(s))
 }
 
 func padLeft(s string, width int) string {
-	w := lipgloss.Width(s)
-	if w >= width {
+	if len(s) >= width {
 		return s
 	}
-	return strings.Repeat(" ", width-w) + s
+	return strings.Repeat(" ", width-len(s)) + s
 }

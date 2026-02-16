@@ -8,6 +8,8 @@ import (
 	"github.com/born1337/hyperliquid-terminal/internal/util"
 )
 
+var separator80 = strings.Repeat("─", 80)
+
 func (m Model) View() string {
 	m.store.RLock()
 	allFills := m.store.Fills
@@ -79,7 +81,7 @@ func (m Model) View() string {
 
 	// Summary
 	b.WriteString("\n")
-	b.WriteString(style.Dim.Render(strings.Repeat("─", 80)))
+	b.WriteString(style.Dim.Render(separator80))
 	b.WriteString("\n")
 	pnlStyle := style.PnlColor(totalRealizedPnl)
 	summary := fmt.Sprintf("  %s %s   %s %s   %s",

@@ -31,7 +31,7 @@ func (m Model) View() string {
 	header := padRight("TIME", colTime) + "  " +
 		padRight("COIN", colCoin) + "  " +
 		padLeft("PAYMENT", colPayment) + "  " +
-		padLeft("RATE", colRate) + "  " +
+		padLeft("RATE/24H", colRate) + "  " +
 		padLeft("POSITION", colPos)
 	b.WriteString(style.TableHeader.Render(header))
 	b.WriteString("\n")

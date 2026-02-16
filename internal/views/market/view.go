@@ -8,7 +8,6 @@ import (
 
 	"github.com/born1337/hyperliquid-terminal/internal/style"
 	"github.com/born1337/hyperliquid-terminal/internal/util"
-	"github.com/charmbracelet/lipgloss"
 )
 
 const (
@@ -107,7 +106,7 @@ func (m Model) View() string {
 		padLeft("PRICE", colPrice) +
 		"  " + padLeft("24H %"+arrow, colChg) +
 		"  " + padLeft("24H VOL", colVol) +
-		"  " + padLeft("FUND/1H", colFund) +
+		"  " + padLeft("FUND/24H", colFund) +
 		"  " + padLeft("OPEN INT", colOI) +
 		"  " + padLeft("ORACLE", colOracle)
 	b.WriteString(style.TableHeader.Render(header))
@@ -214,17 +213,15 @@ func formatCompact(val float64) string {
 }
 
 func padRight(s string, width int) string {
-	w := lipgloss.Width(s)
-	if w >= width {
+	if len(s) >= width {
 		return s
 	}
-	return s + strings.Repeat(" ", width-w)
+	return s + strings.Repeat(" ", width-len(s))
 }
 
 func padLeft(s string, width int) string {
-	w := lipgloss.Width(s)
-	if w >= width {
+	if len(s) >= width {
 		return s
 	}
-	return strings.Repeat(" ", width-w) + s
+	return strings.Repeat(" ", width-len(s)) + s
 }
